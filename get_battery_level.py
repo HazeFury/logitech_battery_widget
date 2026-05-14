@@ -1,31 +1,40 @@
 #!/usr/bin/env python3
 
 import subprocess
+import pydbus
+import re
 
 
 def get_mouse_battery() -> int:
     """
-    Executes the 'solaar show' command to get a dump of all power devices.
+    Connects directly to the user D-Bus to read Solaar's notification tooltip.
+    This is extremely fast and non-blocking (I/O bound optimized).
     Returns the mouse battery level as int, or -1 on error.
     """
     try:
-        # capture_output=True grabs stdout and stderr
-        # text=True returns the output as a string instead of bytes
-        process = subprocess.run(
-            ['solaar', 'show'],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-    except subprocess.CalledProcessError:
-        return -1
+        # Connect to the session bus (user-level bus)
+        bus = pydbus.SessionBus()
 
-    for line in process.stdout.split('\n'):
-        clean_line = line.strip()
-        if clean_line.startswith("Battery:"):
-            parts = clean_line.split()
-            battery_value = parts[1].replace("%,", "")
-            return int(battery_value)
+        # Access the specific Solaar object on the bus
+        solaar_object = bus.get(
+            "io.github.pwr_solaar.solaar",
+            "/org/ayatana/NotificationItem/indicator_solaar"
+        )
+
+        # Read the property we found during introspection
+        tooltip_desc = solaar_object.IconAccessibleDesc
+
+        # Example of tooltip_desc: "G502 X PLUS: Battery: 49% (discharging..."
+        # We use a simple regex to extract the first
+        # group of digits followed by '%'
+        match = re.search(r'(\d+)%', tooltip_desc)
+
+        if match:
+            return int(match.group(1))
+    except Exception:
+        # Silently catch D-Bus errors (e.g., Solaar is not running)
+        pass
+
     return -1
 
 
