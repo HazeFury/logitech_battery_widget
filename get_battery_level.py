@@ -1,11 +1,10 @@
 import subprocess
-import sys
 
 
-def fetch_solaar_data() -> str:
+def get_mouse_battery() -> int:
     """
     Executes the 'solaar show' command to get a dump of all power devices.
-    Returns the standard output as a raw string.
+    Returns the mouse battery level as int or -1 if not found.
     """
     try:
         # capture_output=True grabs stdout and stderr
@@ -16,30 +15,20 @@ def fetch_solaar_data() -> str:
             text=True,
             check=True
         )
-        return process.stdout
-    except subprocess.CalledProcessError as error:
-        print(f"Failed to execute upower: {error}")
-        sys.exit(1)
+    except subprocess.CalledProcessError:
+        return -1
 
-
-def extract_device_metrics(raw_data: str) -> None:
-    """
-    Parses the raw string from UPower to find specific metrics
-    like the model name and battery percentage.
-    """
-    lines = raw_data.split('\n')
-
-    for line in lines:
-        cleaned_line = line.strip()
-        # Basic parsing strategy: look for key strings
-        if cleaned_line.startswith("Codename"):
-            print(f"Device Found: {cleaned_line}")
-        elif cleaned_line.startswith("Battery:"):
-            print(f"Battery Level: {cleaned_line}")
-            return
+    for line in process.stdout.split('\n'):
+        clean_line = line.strip()
+        if clean_line.startswith("Battery:"):
+            parts = clean_line.split()
+            battery_value = parts[1].replace("%,", "")
+            return int(battery_value)
+    return -1
 
 
 if __name__ == "__main__":
-    power_dump = fetch_solaar_data()
-    if power_dump:
-        extract_device_metrics(power_dump)
+    mouse_value = get_mouse_battery()
+
+    mouse_battery = f"{mouse_value}%" if mouse_value != -1 else "--"
+    print(f"Mouse battery = {mouse_battery}")
