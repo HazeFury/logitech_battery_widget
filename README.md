@@ -15,6 +15,8 @@ A simple script to show the battery level of your wireless peripheral (mouse, he
 
 2. On GNOME environment, the plugins **Executor** allows you to run the script at regular intervals and you can choose where to display it.
 
+<br>
+
 ## Installation
 
 You will need these to run the script :
@@ -23,9 +25,40 @@ You will need these to run the script :
 - solaar (https://github.com/pwr-Solaar/Solaar)
 - HeadsetControl (https://github.com/Sapd/HeadsetControl)
 
+Please refer to the Github page of the project to install them.
 Once everything is installed :
 
-### step 1 : clone this repository and test the script
+### STEP 1 : Verify that tools works
+
+- Check python version :
+
+```bash
+python3 --version
+# Should print someting like : Python 3.11.2
+# You must be higher than 3.10
+```
+
+- Check solaar :
+
+```bash
+solaar show
+# if you don't have any error and you can see the data of your peripheral(s), it's good
+```
+
+- Check headsetControl :
+
+```bash
+headsetcontrol -b
+# # if you don't have any error and you can see the data of your peripheral(s), it's good
+```
+
+_If you can't compile HeadsetControl, please read "Troubleshooting" section below._
+
+**Make sure these commands work because they are the ones my script uses.**
+
+---
+
+### STEP 2 : clone this repository and test the script
 
 ```bash
     git clone https://github.com/HazeFury/logitech_battery_widget
@@ -43,7 +76,9 @@ Once everything is installed :
     # You should see something like : 🎧 72% | 🖱️ 50%
 ```
 
-### step 2 : install Extension Manager plugin and Executor
+---
+
+### STEP 3 : install Extension Manager plugin and Executor
 
 If you are using a GNOME environment, you can install "**Extension Manager**" application on your desktop. Then :
 
@@ -57,7 +92,9 @@ If you are using a GNOME environment, you can install "**Extension Manager**" ap
 
 5. Go back to the Installed tab. You should see Executor there. Click the small gear icon ⚙️ next to it to open its settings.
 
-### step 3 : Setup Executor to run the script
+---
+
+### STEP 4 : Setup Executor to run the script
 
 In the Executor configuration window, you can define your widget:
 
@@ -65,7 +102,7 @@ In the Executor configuration window, you can define your widget:
 e.g :
 `/home/YOURNAME/scripts/battery_widget.py`
 
-**Interval**: Set this to 60 seconds (or more). Note that the call to Solaar is somewhat resource-intensive; you should definitely not leave the interval at the default (often 1 or 5 seconds) or you risk slowing down your system. (I will fix that in V2)
+**Interval**: Set this to 60 seconds (or more). Note that the call to Solaar is somewhat resource-intensive; you should definitely not leave the interval at the default (often 1 or 5 seconds) or you risk slowing down your system. I personally set interval to 300 second (5min) because I don't need to look at my battery level regularly.
 
 **Location**: You can choose where to place it (usually Right or Center in the Top Bar).
 
@@ -73,7 +110,11 @@ e.g :
 
 <br>
 
+---
+
 ## Troubleshooting
+
+### "I can't compile the HeadsetControl project because of my older GCC version"
 
 I had trouble installing 'HeadsetControl' because I was using Debian 12, and this caused problems compiling the project because it required Debian 13 to have GCC 13.
 
