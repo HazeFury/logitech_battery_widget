@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import subprocess
 
 
@@ -51,11 +53,19 @@ def get_headset_battery() -> int:
     return -1
 
 
+def format_status_bar_output(mouse_lvl: int, headset_lvl: int) -> None:
+    """
+    Formats the battery levels into a single concise string for the status bar.
+    Using Unicode characters for visual feedback.
+    """
+    mouse_str = f"{mouse_lvl}%" if mouse_lvl != -1 else "--"
+    headset_str = f"{headset_lvl}%" if headset_lvl != -1 else "--"
+
+    # Prints a single line: 🎧 64% | 🖱️ 80%
+    print(f"🎧 {headset_str} | 🖱️ {mouse_str}")
+
+
 if __name__ == "__main__":
     mouse_value = get_mouse_battery()
     headset_value = get_headset_battery()
-
-    mouse_battery = f"{mouse_value}%" if mouse_value != -1 else "--"
-    headset_battery = f"{headset_value}%" if headset_value != -1 else "--"
-    print(f"Mouse battery = {mouse_battery}")
-    print(f"Headset battery = {headset_battery}")
+    format_status_bar_output(mouse_value, headset_value)
