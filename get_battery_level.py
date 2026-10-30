@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import subprocess
-import pydbus
 import re
+import subprocess
+
+import pydbus
 
 
 def get_mouse_battery() -> int:
@@ -18,7 +19,7 @@ def get_mouse_battery() -> int:
         # Access the specific Solaar object on the bus
         solaar_object = bus.get(
             "io.github.pwr_solaar.solaar",
-            "/org/ayatana/NotificationItem/indicator_solaar"
+            "/org/ayatana/NotificationItem/indicator_solaar",
         )
 
         # Read the property we found during introspection
@@ -27,11 +28,11 @@ def get_mouse_battery() -> int:
         # Example of tooltip_desc: "G502 X PLUS: Battery: 49% (discharging..."
         # We use a simple regex to extract the first
         # group of digits followed by '%'
-        match = re.search(r'(\d+)%', tooltip_desc)
+        match = re.search(r"(\d+)%", tooltip_desc)
 
         if match:
             return int(match.group(1))
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         # Silently catch D-Bus errors (e.g., Solaar is not running)
         pass
 
@@ -45,20 +46,20 @@ def get_headset_battery() -> int:
     """
     try:
         process = subprocess.run(
-            ['headsetcontrol', '-b'],
+            ["headsetcontrol", "-b"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
     except subprocess.CalledProcessError:
         return -1
 
-    for line in process.stdout.split('\n'):
+    for line in process.stdout.split("\n"):
         clean_line = line.strip()
         if clean_line.startswith("Level:"):
             parts = clean_line.split()
             if len(parts) >= 2:
-                return int(parts[1].replace('%', ''))
+                return int(parts[1].replace("%", ""))
     return -1
 
 
