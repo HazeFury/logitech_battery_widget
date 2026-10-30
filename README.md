@@ -1,5 +1,7 @@
 # Logitech Battery Widget
 
+## Get Battery Level
+
 A simple script to show the battery level of your wireless peripheral (mouse, headset, keyboard) on Linux (Debian). Designed to work with Logitech hardware, you should be able to adapt it with your own peripherals.
 
 <div align="center">
@@ -159,3 +161,122 @@ headsetcontrol -b
 ```
 
 You should see your headset data with the battery level :)
+
+
+<br>
+
+<br>
+
+<br>
+
+<br>
+
+---
+
+<br>
+
+<br>
+
+<br>
+
+<br>
+
+## Headset Light Control Widget (Interactive Toggle Button)
+
+This optional companion widget adds an interactive button to your GNOME top bar to toggle your headset lighting on and off with immediate visual feedback (green `ON` / red `OFF`).
+
+<div align="center">
+<br>
+  <img src="./headset_light.png" alt="headset_light" width="400" />
+
+  <br>
+</div>
+
+---
+
+### How It Works
+
+1. **State Persistence in Shared Memory**: Because status bar scripts run as transient processes, the current state is stored in `/dev/shm/headset_light.state` (mounted in RAM), ensuring instant reads/writes with zero disk I/O.
+2. **Dual-Mode Script**: The Python script acts as both the display generator (formatting Pango markup for the status bar) and the CLI actuator (executing `headsetcontrol -l 0|1` when triggered with the `toggle` argument).
+3. **Argos Extension**: Manages the button lifecycle, parsing stdout into a top bar indicator and triggering immediate re-renders upon clicking via `refresh=true`.
+
+---
+
+### Prerequisites & Compatibility
+
+#### 1. HeadsetControl with LED Support (G522 Centurion Port)
+
+Make sure your `headsetcontrol` binary includes the `lights` capability:
+
+	headsetcontrol --capabilities
+
+If `lights` is missing, you are running an older build. Rebuild HeadsetControl from the latest repository (which includes the G522 Centurion port) using Docker as described in the Troubleshooting section. Verify that hardware control works:
+
+	headsetcontrol -l 0
+	headsetcontrol -l 1
+
+#### 2. Installing Argos on GNOME 43 (Debian 12)
+
+Recent GNOME versions use ECMAScript Modules (ESM), which cause syntax errors (`import declarations may only appear at top level of a module`) on GNOME 43. To install the compatible pre-ESM version:
+
+```bash
+	# Clone the GNOME-44 compatible tag into a temporary folder
+	git clone --branch GNOME-44 https://github.com/p-e-w/argos.git /tmp/argos-g44
+
+	# Copy the extension directory to your local GNOME extensions folder
+	cp -r /tmp/argos-g44/argos@pew.worldwidemann.com ~/.local/share/gnome-shell/extensions/
+	rm -rf /tmp/argos-g44
+
+	# Ensure version "43" is allowed in metadata.json
+	nano ~/.local/share/gnome-shell/extensions/argos@pew.worldwidemann.com/metadata.json
+```
+
+Add `"43"` to the `"shell-version"` list if missing, then reload your GNOME session (`Alt + F2`, type `r`, and press `Enter` on X11, or log out and back in on Wayland). Finally, enable the extension:
+
+	gnome-extensions enable argos@pew.worldwidemann.com
+
+---
+
+### Setting Up the Toggle Script
+
+```bash
+# 1. Create the Argos configuration directory:
+
+	mkdir -p ~/.config/argos
+
+# 2. Copy the script file and name it according to Argos naming conventions (`.c.` places it on the center of the panel, and `.10m.` sets the passive refresh interval):
+
+    cp ./switch_headset_light.py ~/.config/argos/
+	mv ~/.config/argos/switch_headset_light.py ~/.config/argos/headset_light.c.10m.py
+
+3. Make the script executable:
+
+	chmod +x ~/.config/argos/headset_light.c.10m.py
+```
+
+---
+
+### Clean UI Patch (Removing the Default Script Link)
+
+By default, Argos appends an extra separator and a shortcut opening the script source file in an editor at the bottom of the dropdown menu. To keep only the clean toggle action button:
+
+```bash
+# 1. Open `button.js`:
+
+	nano ~/.local/share/gnome-shell/extensions/argos@pew.worldwidemann.com/button.js
+
+# 2. Locate the end of the menu assembly method (around line 211) and comment out the following lines:
+
+	// if (dropdownLines.length > 0)
+	//   this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+	// let menuItem = new PopupMenu.PopupMenuItem(this._file.get_basename(), {
+	//   style_class: "argos-menu-item-edit"
+	// });
+	// menuItem.connect("activate", Lang.bind(this, function() {
+	//   Gio.AppInfo.launch_default_for_uri("file://" + this._file.get_path(), null);
+	// }));
+	// this.menu.addMenuItem(menuItem);
+
+# 3. Reload GNOME Shell (`Alt + F2`, type `r`, press `Enter` on X11, or restart session on Wayland). The dropdown menu now displays exclusively your action button.
+```
